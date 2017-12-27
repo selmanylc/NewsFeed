@@ -1,0 +1,103 @@
+package com.example.selman.myapplication;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import java.util.ArrayList;
+
+import Model.Channel;
+
+
+public class MainActivity extends BaseActivity {
+
+    RecyclerView channels;
+    int[] imgs;                                               // Image will load wiht ImageDownloader.java
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        imgs = new int[]{R.drawable.bbc,R.drawable.aljazeera,R.drawable.bloomberg};
+
+        channels = (RecyclerView) findViewById(R.id.channelsRecycler);
+
+
+        ArrayList<Channel> channelArrayList = MyApplication.getApplication().channelArrayList;
+
+        ChannelsAdapter channelsAdapter = new ChannelsAdapter(channelArrayList);
+        channels.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        channels.setAdapter(channelsAdapter);
+    }
+
+
+
+    class ChannelsAdapter extends RecyclerView.Adapter<ChannelsAdapter.ViewHolder> {
+
+        private ArrayList<Channel> channelList;
+
+       public class ViewHolder extends RecyclerView.ViewHolder {
+            public TextView name, articlecount;                              //Every item which will to  display  defined.
+            public ImageView images;
+            public LinearLayout item;
+
+            public ViewHolder(View view) {
+                super(view);
+                name = (TextView) view.findViewById(R.id.title);                         // Casting
+                articlecount = (TextView) view.findViewById(R.id.count);
+                item = (LinearLayout) view.findViewById(R.id.item);
+                images = (ImageView) view.findViewById(R.id.first_img);
+            }
+        }
+
+
+       private  ChannelsAdapter(ArrayList<Channel> channelList) {
+            this.channelList = channelList;
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View itemView = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.list_item, parent, false);
+
+            return new ViewHolder(itemView);
+        }
+
+        @Override
+        public void onBindViewHolder(ViewHolder holder, final int position) {
+
+
+            final Channel channel = channelList.get(position);
+            final String source = channel.getSource();
+            if (channel.getStatus().equals("ok")) {
+                holder.name.setText(source);
+                holder.articlecount.setText(channel.getArticleCount() + " " + "News");
+                holder.images.setImageResource(imgs[position]);
+            }
+            holder.item.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    Intent sendIntent = new Intent(MainActivity.this, ChannelNewsActivity.class);   // With the intent this application display second activity and new related to article count.
+                    Bundle bundle = new Bundle();
+                    bundle.putString("channelName", source);
+                    bundle.putInt("position", position);
+                    sendIntent.putExtra("data", bundle);
+                    startActivity(sendIntent);
+                }
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return channelList.size();
+        }
+    }
+}
